@@ -49,7 +49,6 @@ def get_stock_history(ticker: str, date: str, interval: str = "1min", after_hour
     
     # Make API request
     url = f"{API_ENDPOINT}?function={function}&symbol={ticker}&interval={interval}&slice={slice_str}&apikey={API_KEY}"
-    print(url)
     response = requests.get(url)
     content = response.content.decode("utf-8")
 
