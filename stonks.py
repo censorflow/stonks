@@ -4,6 +4,7 @@ import pandas as pd
 import os
 from io import StringIO
 from typing import List, Optional
+import json
 
 API_ENDPOINT = "https://www.alphavantage.co/query"
 API_KEY = os.environ.get("ALPHA_VANTAGE_API_KEY")
@@ -52,7 +53,6 @@ def get_stock_history(ticker: str, date: str, interval: str = "1min", after_hour
     url = f"{API_ENDPOINT}?function={function}&symbol={ticker}&interval={interval}&slice={slice_str}&apikey={API_KEY}"
     response = requests.get(url)
     content = response.content.decode("utf-8")
-
     # Load data into dataframe
     df =  pd.read_csv(StringIO(content))
 
@@ -139,7 +139,6 @@ def get_stock_sentiment(
     tickers_str = ",".join(tickers)
 
     url = f"{API_ENDPOINT}?function={function}&apikey={API_KEY}"
-
     if topics:
         url += f"&topics={topics_str}"
 
@@ -156,8 +155,12 @@ def get_stock_sentiment(
         url += f"&time_to={time_to}"
 
     url += f"&limit={limit}"
-    
+
     response = requests.get(url)
     data = response.json()
 
-    return data
+    # Flatten the JSON and create a DataFrame
+    df = pd.json_normalize(data, "feed")
+    df["time_published"] = pd.to_datetime(df["time_published"], format="%Y%m%dT%H%M%S")
+
+    return df
